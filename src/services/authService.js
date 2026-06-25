@@ -1,7 +1,7 @@
 import api from "./api"
 
 /**
- * Auth service -> POST /api/auth/login  &  POST /api/auth/register
+ * Auth service vv -> POST /api/auth/login  &  POST /api/auth/register
  */
 export const authService = {
   async login(email, password) {

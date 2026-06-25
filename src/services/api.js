@@ -1,7 +1,7 @@
 import axios from "axios"
 
-// Base URL of the REST API. Override with VITE_API_URL when deploying.
-const API_URL = import.meta.env.VITE_API_URL || "https://cafe-backend-18ad.onrender.com/api"
+// an Base URL of the REST API. Override with VITE_API_URL when deploying.
+const API_URL = "https://cafe-backend-18ad.onrender.com/api"
 
 const api = axios.create({
   baseURL: API_URL,
