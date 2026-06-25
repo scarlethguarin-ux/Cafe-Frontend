@@ -1,45 +1,47 @@
 import api from "./api"
 
-const MOCK_ONLY = !import.meta.env.VITE_API_URL
-
 /**
  * Auth service -> POST /api/auth/login  &  POST /api/auth/register
- * Falls back to a demo login when the backend is unavailable so the
- * admin panel can be explored in the preview.
  */
 export const authService = {
   async login(email, password) {
-    const demo = () => {
-      if (email === "admin@cafe.com" && password === "admin123") {
-        return {
-          token: "demo-token",
-          user: { id: 1, nombre: "Admin General", email, rol: "Administrador" },
-        }
-      }
-      throw new Error("Credenciales invalidas o servidor no disponible.")
-    }
-    if (MOCK_ONLY) return demo()
     try {
       const { data } = await api.post("/auth/login", { email, password })
-      // Expecting { token, user }
-      return data
+      // Strip 'Bearer ' if present, as the request interceptor already prepends it
+      const token = data.token && data.token.startsWith("Bearer ") ? data.token.slice(7) : data.token
+      
+      // Map backend user response properties to what frontend expects
+      const user = data.user ? {
+        id: data.user.id_usuario,
+        nombre: data.user.email.split("@")[0],
+        email: data.user.email,
+        rol: data.user.nombre_rol
+      } : null
+
+      return {
+        token,
+        user
+      }
     } catch (err) {
-      return demo()
+      throw new Error(err.response?.data?.message || "Error al iniciar sesión.")
     }
   },
 
   async register(payload) {
-    const demo = () => ({
-      token: "demo-token",
-      user: { id: Date.now(), nombre: payload.nombre, email: payload.email, rol: "Cliente" },
-    })
-    if (MOCK_ONLY) return demo()
     try {
-      const { data } = await api.post("/auth/register", payload)
-      return data
+      // Backend expects: id_rol, email, password, activo
+      const registerPayload = {
+        id_rol: 3, // Cliente
+        email: payload.email,
+        password: payload.password,
+        activo: true
+      }
+      const { data } = await api.post("/auth/register", registerPayload)
+      
+      // Auto login after successful registration
+      return await this.login(payload.email, payload.password)
     } catch (err) {
-      // Demo fallback: pretend registration succeeded
-      return demo()
+      throw new Error(err.response?.data?.message || "Error al registrarse.")
     }
   },
 }
