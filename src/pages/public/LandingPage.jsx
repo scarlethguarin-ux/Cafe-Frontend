@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Coffee, Leaf, Award, ShoppingCart } from "lucide-react"
 import { productosFinalesService } from "@/services/crudService"
 import { useCart } from "@/context/CartContext"
+import { useAuth } from "@/context/AuthContext"
 import { useToast } from "@/components/ui/toast"
 import { formatCurrency } from "@/lib/format"
 import { Button } from "@/components/ui/button"
@@ -12,7 +14,9 @@ export default function LandingPage() {
   const [productos, setProductos] = useState([])
   const [loading, setLoading] = useState(true)
   const { addItem } = useCart()
+  const { isAuthenticated } = useAuth()
   const { toast } = useToast()
+  const navigate = useNavigate()
 
   useEffect(() => {
     productosFinalesService.getAll().then((data) => {
@@ -22,6 +26,11 @@ export default function LandingPage() {
   }, [])
 
   const handleAdd = (p) => {
+    if (!isAuthenticated) {
+      toast("Debes iniciar sesión para agregar productos al carrito", "error")
+      navigate("/login")
+      return
+    }
     addItem(p)
     toast(`${p.nombre} agregado al carrito`)
   }

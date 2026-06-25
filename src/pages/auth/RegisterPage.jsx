@@ -59,12 +59,17 @@ export default function RegisterPage() {
               {loading ? "Creando..." : "Registrarme"}
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            Ya tienes cuenta?{" "}
-            <Link to="/login" className="font-medium text-primary hover:underline">
-              Inicia sesion
+          <div className="mt-4 flex flex-col gap-2 text-center text-sm text-muted-foreground">
+            <Link to="/" className="font-medium text-primary hover:underline">
+              Volver al inicio
             </Link>
-          </p>
+            <p>
+              Ya tienes cuenta?{" "}
+              <Link to="/login" className="font-medium text-primary hover:underline">
+                Inicia sesion
+              </Link>
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

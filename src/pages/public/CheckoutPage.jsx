@@ -1,7 +1,8 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { CheckCircle2 } from "lucide-react"
 import { useCart } from "@/context/CartContext"
+import { useAuth } from "@/context/AuthContext"
 import { pedidosService } from "@/services/crudService"
 import { useToast } from "@/components/ui/toast"
 import { formatCurrency } from "@/lib/format"
@@ -13,11 +14,23 @@ import { Textarea } from "@/components/ui/textarea"
 
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart()
+  const { isAuthenticated } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [form, setForm] = useState({ nombre: "", email: "", telefono: "", direccion: "" })
   const [done, setDone] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast("Inicia sesión para completar el checkout", "error")
+      navigate("/login")
+    }
+  }, [isAuthenticated, navigate, toast])
+
+  if (!isAuthenticated) {
+    return null
+  }
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
 

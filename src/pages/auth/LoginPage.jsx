@@ -56,12 +56,17 @@ export default function LoginPage() {
               {loading ? "Ingresando..." : "Ingresar"}
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            No tienes cuenta?{" "}
-            <Link to="/registro" className="font-medium text-primary hover:underline">
-              Registrate
+          <div className="mt-4 flex flex-col gap-2 text-center text-sm text-muted-foreground">
+            <Link to="/" className="font-medium text-primary hover:underline">
+              Volver al inicio
             </Link>
-          </p>
+            <p>
+              No tienes cuenta?{" "}
+              <Link to="/registro" className="font-medium text-primary hover:underline">
+                Registrate
+              </Link>
+            </p>
+          </div>
           <p className="mt-4 rounded-md bg-muted p-3 text-center text-xs text-muted-foreground">
             Demo admin: admin@cafe.com / admin123
           </p>

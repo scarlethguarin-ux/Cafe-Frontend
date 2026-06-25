@@ -1,13 +1,26 @@
 import { Link, useNavigate } from "react-router-dom"
 import { Trash2, Plus, Minus, ShoppingCart, ArrowRight } from "lucide-react"
 import { useCart } from "@/context/CartContext"
+import { useAuth } from "@/context/AuthContext"
+import { useToast } from "@/components/ui/toast"
 import { formatCurrency } from "@/lib/format"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 export default function CartPage() {
   const { items, updateQty, removeItem, total } = useCart()
+  const { isAuthenticated } = useAuth()
+  const { toast } = useToast()
   const navigate = useNavigate()
+
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      toast("Necesitas iniciar sesión para continuar al checkout", "error")
+      navigate("/login")
+      return
+    }
+    navigate("/checkout")
+  }
 
   if (items.length === 0) {
     return (
@@ -75,7 +88,12 @@ export default function CartPage() {
               <span>Total</span>
               <span className="text-primary">{formatCurrency(total)}</span>
             </div>
-            <Button className="mt-6 w-full" variant="accent" onClick={() => navigate("/checkout")}>
+            {!isAuthenticated && (
+              <div className="mb-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900">
+                Debes iniciar sesión para finalizar la compra. <Link to="/login" className="font-semibold text-primary hover:underline">Inicia sesión</Link> o <Link to="/registro" className="font-semibold text-primary hover:underline">regístrate</Link>.
+              </div>
+            )}
+            <Button className="mt-6 w-full" variant="accent" onClick={handleCheckout}>
               Finalizar compra
               <ArrowRight className="h-4 w-4" />
             </Button>

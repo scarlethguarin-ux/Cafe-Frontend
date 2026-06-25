@@ -1,13 +1,22 @@
 import { Outlet, Link, useNavigate } from "react-router-dom"
-import { Coffee, ShoppingCart, LayoutDashboard, LogIn } from "lucide-react"
+import { Coffee, ShoppingCart, LayoutDashboard, LogIn, LogOut } from "lucide-react"
 import { useCart } from "@/context/CartContext"
 import { useAuth } from "@/context/AuthContext"
+import { useToast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 
 export default function ClientLayout() {
-  const { count } = useCart()
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { count, clearCart } = useCart()
+  const { user, isAuthenticated, isAdmin, logout } = useAuth()
+  const { toast } = useToast()
   const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    clearCart()
+    toast("Sesión cerrada correctamente")
+    navigate("/")
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -27,7 +36,15 @@ export default function ClientLayout() {
                 <span className="hidden sm:inline">Panel</span>
               </Button>
             )}
-            {!isAuthenticated && (
+            {isAuthenticated ? (
+              <>
+                <span className="hidden sm:inline text-sm text-muted-foreground">Hola, {user.nombre}</span>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">Cerrar sesión</span>
+                </Button>
+              </>
+            ) : (
               <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
                 <LogIn className="h-4 w-4" />
                 <span className="hidden sm:inline">Ingresar</span>
