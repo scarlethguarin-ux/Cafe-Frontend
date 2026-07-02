@@ -112,7 +112,7 @@ const resourceMapping = {
       tipo: db.presentacion,
       precio: Number(db.precio_venta),
       stock: Number(db.stock_disponible),
-      imagen: db.presentacion === "Grano" ? "/cafe-grano-entero-bag.png" : "/cafe-molido-bag.png",
+      imagen: db.imagen || (db.presentacion === "Grano" ? "/cafe-grano-entero-bag.png" : "/cafe-molido-bag.png"),
       descripcion: db.nombre_producto
     }),
     toDB: (ui) => ({
@@ -120,7 +120,8 @@ const resourceMapping = {
       presentacion: ui.tipo,
       peso_gramos: 500,
       precio_venta: Number(ui.precio),
-      stock_disponible: Number(ui.stock)
+      stock_disponible: Number(ui.stock),
+      imagen: ui.imagen
     })
   },
   "produccion": {

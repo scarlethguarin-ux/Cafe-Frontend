@@ -18,8 +18,11 @@ import {
   Menu,
   X,
   Store,
+  Sun,
+  Moon,
 } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
+import { useTheme } from "@/context/ThemeContext"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
@@ -66,6 +69,7 @@ const navGroups = [
 
 export default function AdminLayout() {
   const { user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
 
@@ -154,6 +158,15 @@ export default function AdminLayout() {
             <Menu className="h-6 w-6" />
           </button>
           <div className="ml-auto flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-full"
+              aria-label="Cambiar tema"
+            >
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
             <div className="text-right">
               <p className="text-sm font-medium leading-tight">{user?.nombre}</p>
               <p className="text-xs text-muted-foreground">{user?.rol}</p>

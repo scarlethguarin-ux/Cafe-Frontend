@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react"
-import { Plus, Pencil, Trash2, Search, Loader2 } from "lucide-react"
+import { Plus, Pencil, Trash2, Search, Loader2, Upload, X } from "lucide-react"
 import { useToast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -242,6 +242,11 @@ export default function CrudModule({
                       </option>
                     ))}
                   </Select>
+                ) : f.type === "image" ? (
+                  <ImageUpload
+                    value={form[f.name] ?? ""}
+                    onChange={(v) => setField(f.name, v)}
+                  />
                 ) : (
                   <Input
                     id={f.name}
@@ -283,6 +288,141 @@ export default function CrudModule({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+const compressImage = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = (event) => {
+      const img = new Image()
+      img.src = event.target.result
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        const MAX_WIDTH = 800
+        const MAX_HEIGHT = 800
+        let width = img.width
+        let height = img.height
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width
+            width = MAX_WIDTH
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height
+            height = MAX_HEIGHT
+          }
+        }
+
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext("2d")
+        ctx.drawImage(img, 0, 0, width, height)
+        const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7)
+        resolve(compressedBase64)
+      }
+      img.onerror = (err) => reject(err)
+    }
+    reader.onerror = (err) => reject(err)
+  })
+}
+
+function ImageUpload({ value, onChange }) {
+  const [dragActive, setDragActive] = useState(false)
+  const [preview, setPreview] = useState(value || "")
+
+  useEffect(() => {
+    setPreview(value || "")
+  }, [value])
+
+  const handleDrag = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true)
+    } else if (e.type === "dragleave") {
+      setDragActive(false)
+    }
+  }
+
+  const processFile = async (file) => {
+    if (!file || !file.type.startsWith("image/")) {
+      alert("Por favor, selecciona un archivo de imagen válido.")
+      return
+    }
+
+    try {
+      const base64 = await compressImage(file)
+      setPreview(base64)
+      onChange(base64)
+    } catch (err) {
+      console.error(err)
+      alert("Error al procesar la imagen.")
+    }
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processFile(e.dataTransfer.files[0])
+    }
+  }
+
+  const handleChange = (e) => {
+    e.preventDefault()
+    if (e.target.files && e.target.files[0]) {
+      processFile(e.target.files[0])
+    }
+  }
+
+  const handleRemove = (e) => {
+    e.preventDefault()
+    setPreview("")
+    onChange("")
+  }
+
+  return (
+    <div
+      className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors duration-200 mt-1.5 ${
+        dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/35 hover:border-primary/50"
+      } bg-card/50 backdrop-blur-sm`}
+      onDragEnter={handleDrag}
+      onDragOver={handleDrag}
+      onDragLeave={handleDrag}
+      onDrop={handleDrop}
+    >
+      {preview ? (
+        <div className="relative w-full max-w-[200px] aspect-square rounded-md overflow-hidden border bg-background mx-auto">
+          <img src={preview} alt="Vista previa" className="h-full w-full object-cover" />
+          <button
+            onClick={handleRemove}
+            className="absolute top-2 right-2 rounded-full bg-destructive p-1.5 text-destructive-foreground shadow hover:bg-destructive/90 transition-colors cursor-pointer"
+            title="Eliminar imagen"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 py-4 w-full">
+          <Upload className="h-10 w-10 text-muted-foreground mx-auto animate-pulse" />
+          <span className="text-sm font-medium text-foreground">
+            Arrastra una imagen aquí o <span className="text-primary underline font-semibold">explora</span>
+          </span>
+          <span className="text-xs text-muted-foreground">PNG, JPG, WEBP comprimidos automáticamente</span>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleChange}
+          />
+        </label>
+      )}
     </div>
   )
 }

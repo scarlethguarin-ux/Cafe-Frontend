@@ -40,7 +40,7 @@ export default function ProductosFinalesPage() {
         },
         { name: "precio", label: "Precio (COP)", type: "number", required: true },
         { name: "stock", label: "Stock disponible", type: "number", required: true },
-        { name: "imagen", label: "URL de imagen", placeholder: "/cafe-molido-bag.png" },
+        { name: "imagen", label: "Imagen del Producto", type: "image", span: 2 },
         { name: "descripcion", label: "Descripcion", type: "textarea" },
       ]}
     />

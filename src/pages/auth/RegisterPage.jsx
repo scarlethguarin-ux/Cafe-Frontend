@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { Coffee } from "lucide-react"
+import { Coffee, Eye, EyeOff, Sun, Moon } from "lucide-react"
 import { useAuth } from "@/context/AuthContext"
+import { useTheme } from "@/context/ThemeContext"
 import { useToast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -10,9 +11,11 @@ import { Label } from "@/components/ui/label"
 
 export default function RegisterPage() {
   const { register } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const { toast } = useToast()
   const navigate = useNavigate()
   const [form, setForm] = useState({ nombre: "", email: "", password: "" })
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }))
@@ -32,7 +35,18 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary/40 px-4 py-12">
+    <div className="relative flex min-h-screen items-center justify-center bg-secondary/40 px-4 py-12">
+      <div className="absolute right-4 top-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleTheme}
+          className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-full bg-background/50 backdrop-blur shadow-sm border"
+          aria-label="Cambiar tema"
+        >
+          {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </Button>
+      </div>
       <Card className="w-full max-w-md">
         <CardHeader className="items-center text-center">
           <Link to="/" className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -53,7 +67,24 @@ export default function RegisterPage() {
             </div>
             <div>
               <Label htmlFor="password">Contrasena</Label>
-              <Input id="password" type="password" required value={form.password} onChange={set("password")} />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={form.password}
+                  onChange={set("password")}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer focus:outline-none"
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Creando..." : "Registrarme"}

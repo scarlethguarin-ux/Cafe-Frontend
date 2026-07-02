@@ -1,13 +1,15 @@
 import { Outlet, Link, useNavigate } from "react-router-dom"
-import { Coffee, ShoppingCart, LayoutDashboard, LogIn, LogOut } from "lucide-react"
+import { Coffee, ShoppingCart, LayoutDashboard, LogIn, LogOut, Sun, Moon } from "lucide-react"
 import { useCart } from "@/context/CartContext"
 import { useAuth } from "@/context/AuthContext"
+import { useTheme } from "@/context/ThemeContext"
 import { useToast } from "@/components/ui/toast"
 import { Button } from "@/components/ui/button"
 
 export default function ClientLayout() {
   const { count, clearCart } = useCart()
   const { user, isAuthenticated, isAdmin, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const { toast } = useToast()
   const navigate = useNavigate()
 
@@ -26,10 +28,19 @@ export default function ClientLayout() {
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <Coffee className="h-5 w-5" />
             </span>
-            <span className="font-heading text-lg font-bold tracking-tight">Cafe de la Montana</span>
+            <span className="font-heading text-lg font-bold tracking-tight">Café El Coronado</span>
           </Link>
 
           <nav className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="text-muted-foreground hover:text-foreground h-9 w-9 rounded-full"
+              aria-label="Cambiar tema"
+            >
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
             {isAdmin && (
               <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>
                 <LayoutDashboard className="h-4 w-4" />
@@ -71,7 +82,7 @@ export default function ClientLayout() {
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div className="flex items-center gap-2">
             <Coffee className="h-5 w-5 text-accent" />
-            <span className="font-heading font-semibold">Cafe de la Montana</span>
+            <span className="font-heading font-semibold">Café El Coronado</span>
           </div>
           <p className="text-sm text-sidebar-foreground/70">
             Cafe de origen cultivado con dedicacion. {new Date().getFullYear()}
