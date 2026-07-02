@@ -67,9 +67,7 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-          <p className="mt-4 rounded-md bg-muted p-3 text-center text-xs text-muted-foreground">
-            Demo admin: admin@cafe.com / admin123
-          </p>
+
         </CardContent>
       </Card>
     </div>
