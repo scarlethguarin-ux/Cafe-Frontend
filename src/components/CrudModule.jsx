@@ -332,19 +332,24 @@ const compressImage = (file) => {
   })
 }
 
+const IMGBB_API_KEY = import.meta.env.VITE_IMGBB_API_KEY || "89392f035343177a406723732d30027e"
+
 const uploadToImgBB = async (base64) => {
-  const apiKey = import.meta.env.VITE_IMGBB_API_KEY
+  console.log("[ImgBB] Iniciando subida, API key:", IMGBB_API_KEY ? "OK" : "FALTA")
   // Strip the data URL prefix (data:image/jpeg;base64,...)
   const base64Data = base64.replace(/^data:image\/\w+;base64,/, "")
+  console.log("[ImgBB] Base64 preparado, longitud:", base64Data.length)
   const formData = new FormData()
-  formData.append("key", apiKey)
+  formData.append("key", IMGBB_API_KEY)
   formData.append("image", base64Data)
   const res = await fetch("https://api.imgbb.com/1/upload", {
     method: "POST",
     body: formData,
   })
   const json = await res.json()
+  console.log("[ImgBB] Respuesta:", json)
   if (!json.success) throw new Error(json.error?.message || "Error al subir imagen a ImgBB")
+  console.log("[ImgBB] URL obtenida:", json.data.url)
   return json.data.url
 }
 
@@ -352,6 +357,7 @@ function ImageUpload({ value, onChange }) {
   const [dragActive, setDragActive] = useState(false)
   const [preview, setPreview] = useState(value || "")
   const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState("")
 
   useEffect(() => {
     setPreview(value || "")
@@ -368,19 +374,24 @@ function ImageUpload({ value, onChange }) {
   }
 
   const processFile = async (file) => {
+    console.log("[ImageUpload] Archivo recibido:", file?.name, file?.type, file?.size)
     if (!file || !file.type.startsWith("image/")) {
-      alert("Por favor, selecciona un archivo de imagen válido.")
+      setUploadError("Selecciona un archivo de imagen válido (PNG, JPG, WEBP).")
       return
     }
+    setUploadError("")
     setUploading(true)
     try {
+      console.log("[ImageUpload] Comprimiendo...")
       const base64 = await compressImage(file)
+      console.log("[ImageUpload] Comprimido OK, subiendo a ImgBB...")
       const url = await uploadToImgBB(base64)
+      console.log("[ImageUpload] Subida exitosa:", url)
       setPreview(url)
       onChange(url)
     } catch (err) {
-      console.error(err)
-      alert("Error al subir la imagen. Intenta de nuevo.")
+      console.error("[ImageUpload] ERROR:", err)
+      setUploadError(`Error: ${err.message}`)
     } finally {
       setUploading(false)
     }
@@ -409,45 +420,50 @@ function ImageUpload({ value, onChange }) {
   }
 
   return (
-    <div
-      className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors duration-200 mt-1.5 ${
-        dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/35 hover:border-primary/50"
-      } bg-card/50 backdrop-blur-sm`}
-      onDragEnter={handleDrag}
-      onDragOver={handleDrag}
-      onDragLeave={handleDrag}
-      onDrop={handleDrop}
-    >
-      {uploading ? (
-        <div className="flex flex-col items-center justify-center gap-3 py-6">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <span className="text-sm font-medium text-muted-foreground">Subiendo imagen...</span>
-        </div>
-      ) : preview ? (
-        <div className="relative w-full max-w-[200px] aspect-square rounded-md overflow-hidden border bg-background mx-auto">
-          <img src={preview} alt="Vista previa" className="h-full w-full object-cover" />
-          <button
-            onClick={handleRemove}
-            className="absolute top-2 right-2 rounded-full bg-destructive p-1.5 text-destructive-foreground shadow hover:bg-destructive/90 transition-colors cursor-pointer"
-            title="Eliminar imagen"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ) : (
-        <label className="flex cursor-pointer flex-col items-center justify-center gap-2 py-4 w-full">
-          <Upload className="h-10 w-10 text-muted-foreground mx-auto animate-pulse" />
-          <span className="text-sm font-medium text-foreground">
-            Arrastra una imagen aquí o <span className="text-primary underline font-semibold">explora</span>
-          </span>
-          <span className="text-xs text-muted-foreground">PNG, JPG, WEBP — se sube automáticamente a ImgBB</span>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleChange}
-          />
-        </label>
+    <div className="space-y-2">
+      <div
+        className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 text-center transition-colors duration-200 mt-1.5 ${
+          dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/35 hover:border-primary/50"
+        } bg-card/50 backdrop-blur-sm`}
+        onDragEnter={handleDrag}
+        onDragOver={handleDrag}
+        onDragLeave={handleDrag}
+        onDrop={handleDrop}
+      >
+        {uploading ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-6">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <span className="text-sm font-medium text-muted-foreground">Subiendo imagen a ImgBB...</span>
+          </div>
+        ) : preview ? (
+          <div className="relative w-full max-w-[200px] aspect-square rounded-md overflow-hidden border bg-background mx-auto">
+            <img src={preview} alt="Vista previa" className="h-full w-full object-cover" />
+            <button
+              onClick={handleRemove}
+              className="absolute top-2 right-2 rounded-full bg-destructive p-1.5 text-destructive-foreground shadow hover:bg-destructive/90 transition-colors cursor-pointer"
+              title="Eliminar imagen"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 py-4 w-full">
+            <Upload className="h-10 w-10 text-muted-foreground mx-auto animate-pulse" />
+            <span className="text-sm font-medium text-foreground">
+              Arrastra una imagen aquí o <span className="text-primary underline font-semibold">explora</span>
+            </span>
+            <span className="text-xs text-muted-foreground">PNG, JPG, WEBP — se sube automáticamente a ImgBB</span>
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleChange}
+            />
+          </label>
+        )}
+      </div>
+      {uploadError && (
+        <p className="text-xs text-destructive font-medium px-1">{uploadError}</p>
       )}
     </div>
   )
