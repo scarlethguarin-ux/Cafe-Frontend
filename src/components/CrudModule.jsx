@@ -332,26 +332,7 @@ const compressImage = (file) => {
   })
 }
 
-const IMGBB_API_KEY = import.meta.env.VITE_IMGBB_API_KEY || "89392f035343177a406723732d30027e"
 
-const uploadToImgBB = async (base64) => {
-  console.log("[ImgBB] Iniciando subida, API key:", IMGBB_API_KEY ? "OK" : "FALTA")
-  // Strip the data URL prefix (data:image/jpeg;base64,...)
-  const base64Data = base64.replace(/^data:image\/\w+;base64,/, "")
-  console.log("[ImgBB] Base64 preparado, longitud:", base64Data.length)
-  const formData = new FormData()
-  formData.append("key", IMGBB_API_KEY)
-  formData.append("image", base64Data)
-  const res = await fetch("https://api.imgbb.com/1/upload", {
-    method: "POST",
-    body: formData,
-  })
-  const json = await res.json()
-  console.log("[ImgBB] Respuesta:", json)
-  if (!json.success) throw new Error(json.error?.message || "Error al subir imagen a ImgBB")
-  console.log("[ImgBB] URL obtenida:", json.data.url)
-  return json.data.url
-}
 
 function ImageUpload({ value, onChange }) {
   const [dragActive, setDragActive] = useState(false)
@@ -374,7 +355,6 @@ function ImageUpload({ value, onChange }) {
   }
 
   const processFile = async (file) => {
-    console.log("[ImageUpload] Archivo recibido:", file?.name, file?.type, file?.size)
     if (!file || !file.type.startsWith("image/")) {
       setUploadError("Selecciona un archivo de imagen válido (PNG, JPG, WEBP).")
       return
@@ -382,16 +362,12 @@ function ImageUpload({ value, onChange }) {
     setUploadError("")
     setUploading(true)
     try {
-      console.log("[ImageUpload] Comprimiendo...")
       const base64 = await compressImage(file)
-      console.log("[ImageUpload] Comprimido OK, subiendo a ImgBB...")
-      const url = await uploadToImgBB(base64)
-      console.log("[ImageUpload] Subida exitosa:", url)
-      setPreview(url)
-      onChange(url)
+      setPreview(base64)
+      onChange(base64)
     } catch (err) {
       console.error("[ImageUpload] ERROR:", err)
-      setUploadError(`Error: ${err.message}`)
+      setUploadError(`Error al procesar la imagen: ${err.message}`)
     } finally {
       setUploading(false)
     }
@@ -433,7 +409,7 @@ function ImageUpload({ value, onChange }) {
         {uploading ? (
           <div className="flex flex-col items-center justify-center gap-3 py-6">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <span className="text-sm font-medium text-muted-foreground">Subiendo imagen a ImgBB...</span>
+            <span className="text-sm font-medium text-muted-foreground">Procesando imagen...</span>
           </div>
         ) : preview ? (
           <div className="relative w-full max-w-[200px] aspect-square rounded-md overflow-hidden border bg-background mx-auto">
