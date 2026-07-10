@@ -331,9 +331,26 @@ const compressImage = (file) => {
   })
 }
 
+const uploadToImgBB = async (base64) => {
+  const apiKey = import.meta.env.VITE_IMGBB_API_KEY
+  // Strip the data URL prefix (data:image/jpeg;base64,...)
+  const base64Data = base64.replace(/^data:image\/\w+;base64,/, "")
+  const formData = new FormData()
+  formData.append("key", apiKey)
+  formData.append("image", base64Data)
+  const res = await fetch("https://api.imgbb.com/1/upload", {
+    method: "POST",
+    body: formData,
+  })
+  const json = await res.json()
+  if (!json.success) throw new Error(json.error?.message || "Error al subir imagen a ImgBB")
+  return json.data.url
+}
+
 function ImageUpload({ value, onChange }) {
   const [dragActive, setDragActive] = useState(false)
   const [preview, setPreview] = useState(value || "")
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     setPreview(value || "")
@@ -354,14 +371,17 @@ function ImageUpload({ value, onChange }) {
       alert("Por favor, selecciona un archivo de imagen válido.")
       return
     }
-
+    setUploading(true)
     try {
       const base64 = await compressImage(file)
-      setPreview(base64)
-      onChange(base64)
+      const url = await uploadToImgBB(base64)
+      setPreview(url)
+      onChange(url)
     } catch (err) {
       console.error(err)
-      alert("Error al procesar la imagen.")
+      alert("Error al subir la imagen. Intenta de nuevo.")
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -397,7 +417,12 @@ function ImageUpload({ value, onChange }) {
       onDragLeave={handleDrag}
       onDrop={handleDrop}
     >
-      {preview ? (
+      {uploading ? (
+        <div className="flex flex-col items-center justify-center gap-3 py-6">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <span className="text-sm font-medium text-muted-foreground">Subiendo imagen...</span>
+        </div>
+      ) : preview ? (
         <div className="relative w-full max-w-[200px] aspect-square rounded-md overflow-hidden border bg-background mx-auto">
           <img src={preview} alt="Vista previa" className="h-full w-full object-cover" />
           <button
@@ -414,7 +439,7 @@ function ImageUpload({ value, onChange }) {
           <span className="text-sm font-medium text-foreground">
             Arrastra una imagen aquí o <span className="text-primary underline font-semibold">explora</span>
           </span>
-          <span className="text-xs text-muted-foreground">PNG, JPG, WEBP comprimidos automáticamente</span>
+          <span className="text-xs text-muted-foreground">PNG, JPG, WEBP — se sube automáticamente a ImgBB</span>
           <input
             type="file"
             accept="image/*"
