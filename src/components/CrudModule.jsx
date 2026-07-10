@@ -244,6 +244,7 @@ export default function CrudModule({
                   </Select>
                 ) : f.type === "image" ? (
                   <ImageUpload
+                    key={editing ? `edit-${editing.id}` : "new"}
                     value={form[f.name] ?? ""}
                     onChange={(v) => setField(f.name, v)}
                   />
