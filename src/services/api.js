@@ -6,6 +6,7 @@ const API_URL = "https://cafe-backend-18ad.onrender.com/api"
 const api = axios.create({
   baseURL: API_URL,
   headers: { "Content-Type": "application/json" },
+  timeout: 15000, // 15 segundos de timeout para evitar que se quede cargando infinito
 })
 
 // Attach JWT token (if present) to every request
